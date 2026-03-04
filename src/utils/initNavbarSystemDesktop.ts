@@ -1,0 +1,296 @@
+export const initNavDesktop = async () => {
+  // ============================================
+  // NAVBAR SYSTEM — DESKTOP ONLY
+  // ============================================
+
+  const ANIMATION_DURATION = 400;
+  const CLOSE_DELAY = 200;
+  const INFO_FADE_DURATION = 200;
+
+  // ——————————————————————————————————
+  // PART 1: Desktop Dropdown Cards
+  // ——————————————————————————————————
+
+  const links = document.querySelectorAll('[nav-dropdown-link]');
+  const cards = document.querySelectorAll('[nav-dropdown-card]');
+  const dropdownWrapper = document.querySelector('[nav-dropdown-card="wrapper"]');
+
+  let activeCard: HTMLElement | null = null;
+  let closeTimeout: any = null;
+  let clickLocked = false;
+
+  function updateLinkClasses(activeKey: string) {
+    links.forEach((l) => {
+      const key = l.getAttribute('nav-dropdown-link');
+      if (key === activeKey) {
+        l.classList.add('is-active');
+        l.classList.remove('is-inactive');
+      } else {
+        l.classList.remove('is-active');
+        l.classList.add('is-inactive');
+      }
+    });
+  }
+
+  function clearLinkClasses() {
+    links.forEach((l) => {
+      l.classList.remove('is-active');
+      l.classList.remove('is-inactive');
+    });
+  }
+
+  cards.forEach((card) => {
+    if (card.getAttribute('nav-dropdown-card') === 'wrapper') return;
+
+    const el = card as HTMLElement;
+    el.style.display = 'none';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-15px)';
+    el.style.transition = `opacity ${ANIMATION_DURATION}ms cubic-bezier(0.25, 0.1, 0.25, 1), transform ${ANIMATION_DURATION}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+    el.style.pointerEvents = 'none';
+  });
+
+  function openCard(card: HTMLElement) {
+    if (activeCard === card) return;
+
+    if (activeCard) closeCardInstant(activeCard);
+
+    if (dropdownWrapper) {
+      (dropdownWrapper as HTMLElement).style.display = 'block';
+    }
+
+    activeCard = card;
+    card.style.display = 'flex';
+    card.style.pointerEvents = 'auto';
+
+    resetInfoTabs(card);
+    void card.offsetHeight;
+
+    card.style.opacity = '1';
+    card.style.transform = 'translateY(0)';
+  }
+
+  function closeCard(card: HTMLElement) {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(-15px)';
+    card.style.pointerEvents = 'none';
+
+    if (activeCard === card) {
+      activeCard = null;
+      clickLocked = false;
+      clearLinkClasses();
+    }
+
+    setTimeout(() => {
+      if (card.style.opacity === '0') {
+        card.style.display = 'none';
+        if (!activeCard && dropdownWrapper) {
+          (dropdownWrapper as HTMLElement).style.display = 'none';
+        }
+      }
+    }, ANIMATION_DURATION);
+  }
+
+  function closeCardInstant(card: HTMLElement) {
+    card.style.display = 'none';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(-15px)';
+    card.style.pointerEvents = 'none';
+
+    if (activeCard === card) {
+      activeCard = null;
+      clickLocked = false;
+    }
+
+    if (!activeCard && dropdownWrapper) {
+      (dropdownWrapper as HTMLElement).style.display = 'none';
+    }
+  }
+
+  function cancelClose() {
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+      closeTimeout = null;
+    }
+  }
+
+  function scheduleClose(card: HTMLElement) {
+    if (clickLocked) return;
+    closeTimeout = setTimeout(() => closeCard(card), CLOSE_DELAY);
+  }
+
+  const interactiveCards = [...cards].filter(
+    (c) => c.getAttribute('nav-dropdown-card') !== 'wrapper'
+  ) as HTMLElement[];
+
+  links.forEach((link) => {
+    const key = link.getAttribute('nav-dropdown-link');
+    const matchingCard = document.querySelector(
+      `[nav-dropdown-card="${key}"]`
+    ) as HTMLElement | null;
+
+    if (!matchingCard || key === 'wrapper') return;
+
+    link.addEventListener('mouseenter', () => {
+      cancelClose();
+      if (clickLocked) {
+        clickLocked = false;
+        clearLinkClasses();
+      }
+      openCard(matchingCard);
+    });
+
+    link.addEventListener('mouseleave', () => {
+      scheduleClose(matchingCard);
+    });
+
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelClose();
+
+      if (activeCard === matchingCard && clickLocked) {
+        clickLocked = false;
+        closeCard(matchingCard);
+      } else {
+        openCard(matchingCard);
+        clickLocked = true;
+        updateLinkClasses(key!);
+      }
+    });
+  });
+
+  interactiveCards.forEach((card) => {
+    card.addEventListener('mouseenter', cancelClose);
+    card.addEventListener('mouseleave', () => scheduleClose(card));
+  });
+
+  if (dropdownWrapper) {
+    dropdownWrapper.addEventListener('mouseenter', cancelClose);
+    dropdownWrapper.addEventListener('mouseleave', () => {
+      if (activeCard) scheduleClose(activeCard);
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!activeCard) return;
+
+    const clickedInsideLink = [...links].some((l) => l.contains(e.target as Node));
+    const clickedInsideCard = interactiveCards.some((c) => c.contains(e.target as Node));
+    const clickedInsideWrapper = dropdownWrapper && dropdownWrapper.contains(e.target as Node);
+
+    if (!clickedInsideLink && !clickedInsideCard && !clickedInsideWrapper) {
+      clickLocked = false;
+      closeCard(activeCard);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeCard) {
+      clickLocked = false;
+      closeCard(activeCard);
+    }
+  });
+
+  // ——————————————————————————————————
+  // PART 2: Desktop Inner Info Tabs (Crossfade)
+  // ——————————————————————————————————
+
+  const infoLinks = document.querySelectorAll('[navbar-info-link]');
+  const infoCards = document.querySelectorAll('[navbar-info-card]');
+
+  infoCards.forEach((card) => {
+    const el = card as HTMLElement;
+    const parent = el.parentElement;
+    if (parent) parent.style.position = 'relative';
+
+    el.style.transition = `opacity ${INFO_FADE_DURATION}ms ease`;
+
+    if (el.getAttribute('navbar-info-default') === 'active') {
+      el.style.position = 'relative';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+      el.style.zIndex = '1';
+    } else {
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.width = '100%';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = '0';
+    }
+  });
+
+  function showInfoCard(key: string, parentCard: Element | null) {
+    const scope = parentCard || document;
+
+    scope.querySelectorAll('[navbar-info-card]').forEach((c) => {
+      const el = c as HTMLElement;
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.width = '100%';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = '0';
+    });
+
+    scope.querySelectorAll('[navbar-info-link]').forEach((l) => l.classList.remove('is-active'));
+
+    const targetCard = scope.querySelector(`[navbar-info-card="${key}"]`) as HTMLElement | null;
+
+    const targetLink = scope.querySelector(`[navbar-info-link="${key}"]`);
+
+    if (targetCard) {
+      targetCard.style.position = 'relative';
+      targetCard.style.width = '';
+      targetCard.style.opacity = '1';
+      targetCard.style.pointerEvents = 'auto';
+      targetCard.style.zIndex = '1';
+    }
+
+    if (targetLink) targetLink.classList.add('is-active');
+  }
+
+  function resetInfoTabs(parentCard: HTMLElement) {
+    parentCard.querySelectorAll('[navbar-info-card]').forEach((c) => {
+      const el = c as HTMLElement;
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.width = '100%';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = '0';
+    });
+
+    parentCard
+      .querySelectorAll('[navbar-info-link]')
+      .forEach((l) => l.classList.remove('is-active'));
+
+    const defaultCard = parentCard.querySelector(
+      '[navbar-info-default="active"]'
+    ) as HTMLElement | null;
+
+    if (defaultCard) {
+      const defaultKey = defaultCard.getAttribute('navbar-info-card');
+      defaultCard.style.position = 'relative';
+      defaultCard.style.width = '';
+      defaultCard.style.opacity = '1';
+      defaultCard.style.pointerEvents = 'auto';
+      defaultCard.style.zIndex = '1';
+
+      const defaultLink = parentCard.querySelector(`[navbar-info-link="${defaultKey}"]`);
+
+      if (defaultLink) defaultLink.classList.add('is-active');
+    }
+  }
+
+  infoLinks.forEach((link) => {
+    const key = link.getAttribute('navbar-info-link');
+    link.addEventListener('mouseenter', () => {
+      showInfoCard(key!, link.closest('[nav-dropdown-card]'));
+    });
+  });
+};

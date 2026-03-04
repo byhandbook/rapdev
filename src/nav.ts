@@ -3,7 +3,9 @@ import { fetchCompany } from '$utils/fetchCompany';
 import { fetchDataDog } from '$utils/fetchDataDog';
 import { fetchResources } from '$utils/fetchResources';
 import { fetchServiceNow } from '$utils/fetchServiceNow';
-import { initNav } from '$utils/initNavbarSystem';
+import { initNavDesktop } from '$utils/initNavbarSystemDesktop';
+import { initNavMobile } from '$utils/initNavbarSystemMobile';
+import { reLayout } from '$utils/reLayout';
 
 async function loadMegaCardRight() {
   try {
@@ -33,8 +35,16 @@ async function loadMegaCardRight() {
       target.insertBefore(resourcesCard, targetLastChild);
       target.insertBefore(companyCard, targetLastChild);
     }
+
+    if (window.innerWidth <= 992) {
+      reLayout();
+      await initNavMobile();
+      console.log('Nav ready');
+      return;
+    }
     //  await navbarSystem();
-    await initNav();
+    await initNavDesktop();
+    console.log('Nav ready');
   } catch (error) {
     console.error('Error fetching mega card:', error);
   }
@@ -42,3 +52,15 @@ async function loadMegaCardRight() {
 
 // Run after DOM loads
 document.addEventListener('DOMContentLoaded', loadMegaCardRight);
+
+// Reload page on resize
+
+let isMobile = window.innerWidth <= 992;
+
+window.addEventListener('resize', () => {
+  const nowMobile = window.innerWidth <= 992;
+
+  if (nowMobile !== isMobile) {
+    window.location.reload();
+  }
+});
