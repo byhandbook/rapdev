@@ -3,7 +3,7 @@ export const initNavMobile = async () => {
   // NAVBAR SYSTEM — CLICK ONLY (All Devices)
   // ============================================
 
-  const ANIMATION_DURATION = 400;
+  const ANIMATION_DURATION = 200;
   const INFO_FADE_DURATION = 200;
 
   const isMobile = window.innerWidth <= 992;
@@ -108,6 +108,7 @@ export const initNavMobile = async () => {
     if (!matchingCard || key === 'wrapper') return;
 
     link.addEventListener('click', (e) => {
+      if (link.getAttribute('no-mobile-nav')) return;
       e.preventDefault();
       e.stopPropagation();
 

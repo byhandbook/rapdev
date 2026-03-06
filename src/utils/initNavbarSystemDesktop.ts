@@ -160,14 +160,15 @@ export const initNavDesktop = async () => {
     });
   });
 
-  interactiveCards.forEach((card) => {
-    card.addEventListener('mouseenter', cancelClose);
-    card.addEventListener('mouseleave', () => scheduleClose(card));
-  });
+  //   interactiveCards.forEach((card) => {
+  //     card.addEventListener('mouseenter', cancelClose);
+  //     card.addEventListener('mouseleave', () => scheduleClose(card));
+  //   });
 
   if (dropdownWrapper) {
     dropdownWrapper.addEventListener('mouseenter', cancelClose);
     dropdownWrapper.addEventListener('mouseleave', () => {
+      console.log('MOUSE LEFT!');
       if (activeCard) scheduleClose(activeCard);
     });
   }

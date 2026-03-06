@@ -39,12 +39,12 @@ async function loadMegaCardRight() {
     if (window.innerWidth <= 992) {
       reLayout();
       await initNavMobile();
-      console.log('Nav ready');
+      console.log('Mobile Nav ready');
       return;
     }
     //  await navbarSystem();
     await initNavDesktop();
-    console.log('Nav ready');
+    console.log(' Desktop Nav ready');
   } catch (error) {
     console.error('Error fetching mega card:', error);
   }
