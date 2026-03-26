@@ -80,7 +80,9 @@ export const initNavDesktop = async () => {
       clickLocked = false;
       clearLinkClasses();
     }
-
+    document.querySelectorAll('.navbar-underline').forEach((eachItem) => {
+      eachItem.classList.remove('active');
+    });
     setTimeout(() => {
       if (card.style.opacity === '0') {
         card.style.display = 'none';
@@ -129,22 +131,48 @@ export const initNavDesktop = async () => {
       `[nav-dropdown-card="${key}"]`
     ) as HTMLElement | null;
 
-    if (!matchingCard || key === 'wrapper') return;
-
     link.addEventListener('mouseenter', () => {
+      console.log(link, 'hovered link');
+      console.log(matchingCard, 'MATCHING CARD');
       cancelClose();
+
       if (clickLocked) {
         clickLocked = false;
         clearLinkClasses();
       }
-      openCard(matchingCard);
+
+      // Handle wrapper link underline
+      if (key === 'wrapper') {
+        return;
+      }
+
+      if (matchingCard) {
+        document.querySelectorAll('.navbar-underline').forEach((eachItem) => {
+          eachItem.classList.remove('active');
+        });
+        const underline = link.querySelector('.navbar-underline');
+        underline?.classList.add('active');
+        openCard(matchingCard);
+      }
     });
 
     link.addEventListener('mouseleave', () => {
-      scheduleClose(matchingCard);
+      console.log('nav leave');
+      // remove underline state
+      if (key === 'wrapper') {
+        return;
+      }
+
+      if (matchingCard) {
+        // const underline = link.querySelector('.navbar-underline');
+        // underline?.classList.remove('active');
+        scheduleClose(matchingCard);
+      }
     });
 
     link.addEventListener('click', (e) => {
+      if (key === 'wrapper') return;
+
       e.preventDefault();
       e.stopPropagation();
       cancelClose();
@@ -160,15 +188,9 @@ export const initNavDesktop = async () => {
     });
   });
 
-  //   interactiveCards.forEach((card) => {
-  //     card.addEventListener('mouseenter', cancelClose);
-  //     card.addEventListener('mouseleave', () => scheduleClose(card));
-  //   });
-
   if (dropdownWrapper) {
     dropdownWrapper.addEventListener('mouseenter', cancelClose);
     dropdownWrapper.addEventListener('mouseleave', () => {
-      console.log('MOUSE LEFT!');
       if (activeCard) scheduleClose(activeCard);
     });
   }
