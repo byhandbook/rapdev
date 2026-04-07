@@ -7,7 +7,21 @@ const BUILD_DIRECTORY = 'dist';
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Config entrypoint files
-const ENTRY_POINTS = ['src/safa.ts','src/index.ts', 'src/nav.ts', 'src/videoPlaylist.ts', 'src/blogAuthors.ts', 'src/navDropdown.ts'];
+const ENTRY_POINTS = [
+  'src/about.ts',
+  'src/blogPosts.ts',
+  'src/careers.ts',
+  'src/datadogParentOfferingsTemplates.ts',
+  'src/events.ts',
+  'src/eventTemplates.ts',
+  'src/nav.ts',
+  'src/navDropdown.ts',
+  'src/resources-blogs.ts',
+  'src/resourcesTemplates.ts',
+  'src/resources-blogs.ts',
+  'src/serviceNowParentOfferingsTemplates.ts',
+  'src/videoPlaylist.ts',
+];
 
 // Config dev serving
 const LIVE_RELOAD = !PRODUCTION;

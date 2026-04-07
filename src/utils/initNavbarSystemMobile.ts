@@ -222,6 +222,13 @@ export const initNavMobile = async () => {
     if (!key || !parentCard) return;
 
     link.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+
+      const isButtonLink = target.closest('a.button');
+
+      // 👉 If it's a button link, allow normal navigation
+      if (isButtonLink) return;
+
       e.preventDefault();
       e.stopPropagation();
 
