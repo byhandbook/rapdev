@@ -12,7 +12,7 @@ export const fetchDataDog = async () => {
   );
   // grab the element
   const marketPlaceIntegrationsEl = marketPlaceIntegrationsDoc.querySelector(`[data="dd-int-el"]`);
-  console.log(marketPlaceIntegrationsDoc, 'Marketplace int element');
+
   // grab the parent to inject this in, inside megaCardRight
   const marketPLaceIntegrationsParent = megaCardRight?.querySelector(`[data="dd-int-parent"]`);
   marketPLaceIntegrationsParent?.appendChild(marketPlaceIntegrationsEl);

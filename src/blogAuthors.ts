@@ -16,7 +16,7 @@ window.Webflow.push(() => {
       postAuthors.forEach((author) => {
         if (author.textContent.trim() === authorName) {
           const authPost = eachPost.querySelector(`[data="auth-post"]`);
-          console.log(authExpand, 'AUTH EXPAND');
+
           if (authPost && authExpand) {
             authExpand.append(authPost.cloneNode(true));
           }

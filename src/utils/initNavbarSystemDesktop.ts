@@ -132,8 +132,6 @@ export const initNavDesktop = async () => {
     ) as HTMLElement | null;
 
     link.addEventListener('mouseenter', () => {
-      console.log(link, 'hovered link');
-      console.log(matchingCard, 'MATCHING CARD');
       cancelClose();
 
       if (clickLocked) {
@@ -157,7 +155,6 @@ export const initNavDesktop = async () => {
     });
 
     link.addEventListener('mouseleave', () => {
-      console.log('nav leave');
       // remove underline state
       if (key === 'wrapper') {
         return;
@@ -171,7 +168,7 @@ export const initNavDesktop = async () => {
     });
 
     link.addEventListener('click', (e) => {
-      if (key === 'wrapper') return;
+      if (key === 'wrapper' || (e.target as HTMLElement).closest('[nav-dropdown-link]')) return;
 
       e.preventDefault();
       e.stopPropagation();

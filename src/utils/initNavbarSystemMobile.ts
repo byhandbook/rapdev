@@ -224,9 +224,12 @@ export const initNavMobile = async () => {
     link.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
 
-      const isButtonLink = target.closest('a.button');
+      const isButtonLink =
+        target.closest('.mega-child-item') ||
+        target.closest('.mobile-cta') ||
+        target.closest('.card-wrapper');
 
-      // 👉 If it's a button link, allow normal navigation
+      // 👉 If it's a cta button, item link, or card
       if (isButtonLink) return;
 
       e.preventDefault();
@@ -307,10 +310,11 @@ export const initNavMobile = async () => {
     document.body.classList.remove('nav-open');
   };
 
-  mobileNavTrigger?.addEventListener('click', () => {
+  mobileNavTrigger?.addEventListener('click', (e) => {
     if (globalNavbar?.classList.contains('open')) {
       closeGlobalNav();
     } else {
+      if (e.target.closest('.navbar-brand')) return;
       openGlobalNav();
     }
   });

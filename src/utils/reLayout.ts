@@ -7,7 +7,7 @@ export const reLayout = () => {
 
     const mobileInfoCardParent = eachLinkParent.querySelector(`.mega-drawer`);
 
-    mobileInfoCardParent?.append(correspondingInfoCard);
+    const appended = mobileInfoCardParent?.append(correspondingInfoCard);
   });
 
   // mobile footer wrap
