@@ -230,7 +230,11 @@ export const initNavMobile = async () => {
         target.closest('.card-wrapper');
 
       // 👉 If it's a cta button, item link, or card
-      if (isButtonLink) return;
+      if (isButtonLink) {
+        closeGlobalNav();
+
+        return;
+      }
 
       e.preventDefault();
       e.stopPropagation();
@@ -278,7 +282,7 @@ export const initNavMobile = async () => {
     }
 
     if (shouldCloseNavbar && globalNavbar) {
-      globalNavbar.classList.remove('open');
+      closeGlobalNav();
     }
   }
 
@@ -304,10 +308,14 @@ export const initNavMobile = async () => {
     globalNavbar?.classList.add('open');
     document.body.classList.add('nav-open');
   };
-
   const closeGlobalNav = () => {
+    console.log('inside close');
+
     globalNavbar?.classList.remove('open');
-    document.body.classList.remove('nav-open');
+
+    requestAnimationFrame(() => {
+      document.body.classList.remove('nav-open');
+    });
   };
 
   mobileNavTrigger?.addEventListener('click', (e) => {

@@ -6,45 +6,99 @@ import { fetchServiceNow } from '$utils/fetchServiceNow';
 import { initNavDesktop } from '$utils/initNavbarSystemDesktop';
 import { initNavMobile } from '$utils/initNavbarSystemMobile';
 import { reLayout } from '$utils/reLayout';
+const CACHE_KEY = 'megaCardsCache';
+const CACHE_TTL = 1000 * 60 * 60 * 24 * 30;
+
+function getCache() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const parsed = JSON.parse(cached);
+
+    const isExpired = Date.now() - parsed.timestamp > CACHE_TTL;
+    if (isExpired) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    return parsed.html;
+  } catch {
+    return null;
+  }
+}
+
+function setCache(html: string) {
+  localStorage.setItem(
+    CACHE_KEY,
+    JSON.stringify({
+      html,
+      timestamp: Date.now(),
+    })
+  );
+}
 
 async function loadMegaCardRight() {
   try {
-    // fetch data dog
-    const dataDogCard = await fetchDataDog();
-
-    // fetch service now
-    const serviceNowCard = await fetchServiceNow();
-
-    // fetch blogs
-    const blogsCard = await fetchBlogs();
-
-    // fetch resources
-    const resourcesCard = await fetchResources();
-
-    // fetch company
-    const companyCard = await fetchCompany();
-
-    // Inject into current page (change selector if needed)
     const target = document.querySelector('.mega-cards');
     const targetLastChild = target?.lastElementChild;
 
-    if (target && dataDogCard && serviceNowCard && blogsCard && resourcesCard && companyCard) {
-      target.insertBefore(dataDogCard, targetLastChild);
-      target.insertBefore(serviceNowCard, targetLastChild);
-      target.insertBefore(blogsCard, targetLastChild);
-      target.insertBefore(resourcesCard, targetLastChild);
-      target.insertBefore(companyCard, targetLastChild);
+    if (!target) return;
+
+    // 👉 1. Try cache first
+    const cachedHTML = getCache();
+
+    if (cachedHTML) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = cachedHTML;
+
+      Array.from(wrapper.children).forEach((child) => {
+        target.insertBefore(child, targetLastChild);
+      });
+
+      console.log('Loaded from cache');
+    } else {
+      // 👉 2. Fetch fresh data
+      const [dataDogCard, serviceNowCard, blogsCard, resourcesCard, companyCard] =
+        await Promise.all([
+          fetchDataDog(),
+          fetchServiceNow(),
+          fetchBlogs(),
+          fetchResources(),
+          fetchCompany(),
+        ]);
+
+      if (dataDogCard && serviceNowCard && blogsCard && resourcesCard && companyCard) {
+        const fragment = document.createDocumentFragment();
+
+        fragment.appendChild(dataDogCard);
+        fragment.appendChild(serviceNowCard);
+        fragment.appendChild(blogsCard);
+        fragment.appendChild(resourcesCard);
+        fragment.appendChild(companyCard);
+
+        // Save HTML snapshot
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(fragment.cloneNode(true));
+        setCache(tempDiv.innerHTML);
+
+        // Inject into DOM
+        target.insertBefore(fragment, targetLastChild);
+
+        console.log('Fetched and cached');
+      }
     }
 
+    // 👉 Nav init (unchanged)
     if (window.innerWidth <= 992) {
       reLayout();
       await initNavMobile();
       console.log('Mobile Nav ready');
       return;
     }
-    //  await navbarSystem();
+
     await initNavDesktop();
-    console.log(' Desktop Nav ready');
+    console.log('Desktop Nav ready');
   } catch (error) {
     console.error('Error fetching mega card:', error);
   }
@@ -54,7 +108,6 @@ async function loadMegaCardRight() {
 document.addEventListener('DOMContentLoaded', loadMegaCardRight);
 
 // Reload page on resize
-
 let isMobile = window.innerWidth <= 992;
 
 window.addEventListener('resize', () => {
