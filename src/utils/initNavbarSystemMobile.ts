@@ -231,11 +231,12 @@ export const initNavMobile = async () => {
 
       // 👉 If it's a cta button, item link, or card
       if (isButtonLink) {
+        console.log('it goes in condition');
         closeGlobalNav();
 
         return;
       }
-
+      console.log('SHould not see this log');
       e.preventDefault();
       e.stopPropagation();
 
@@ -305,17 +306,18 @@ export const initNavMobile = async () => {
   const mobileNavTrigger = document.querySelector(`[data="mobile-nav"]`);
 
   const openGlobalNav = () => {
+    const navEl = document.querySelector('.nav-menu-wrap') as HTMLElement;
+    navEl.classList.add('active');
+    console.log(navEl, 'after open');
     globalNavbar?.classList.add('open');
     document.body.classList.add('nav-open');
   };
   const closeGlobalNav = () => {
-    console.log('inside close');
-
+    const navEl = document.querySelector('.nav-menu-wrap') as HTMLElement;
+    navEl.classList.remove('active');
+    console.log(navEl, 'after close');
     globalNavbar?.classList.remove('open');
-
-    requestAnimationFrame(() => {
-      document.body.classList.remove('nav-open');
-    });
+    document.body.classList.remove('nav-open');
   };
 
   mobileNavTrigger?.addEventListener('click', (e) => {
