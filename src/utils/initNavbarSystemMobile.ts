@@ -256,18 +256,12 @@ export const initNavMobile = async () => {
 
     link.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-
-      // Datadog lists use `.mega-child-item` around sub-links; ServiceNow uses
-      // `.w-dyn-item` in a `grid _2-columns` without that class, but both use
-      // `.mega-link-expanded` for the deep links. Without matching expanded links,
-      // those clicks bubble here, get preventDefault, and never navigate.
       const isButtonLink =
         target.closest('.mega-child-item') ||
         target.closest('.mega-link-expanded') ||
         target.closest('.mobile-cta') ||
         target.closest('.card-wrapper');
 
-      // 👉 If it's a cta button, item link, or card
       if (isButtonLink) {
         closeGlobalNav();
 
