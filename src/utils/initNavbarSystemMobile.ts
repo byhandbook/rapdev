@@ -37,6 +37,27 @@ export const initNavMobile = async () => {
     el.style.pointerEvents = 'none';
   });
 
+  /** Must match the initial `infoCards` pass — inner tabs have their own inline state from `showInfoCard`. */
+  function setInfoCardInitialState(el: HTMLElement) {
+    const parent = el.parentElement;
+    if (parent) parent.style.position = 'relative';
+    el.style.transition = `opacity ${INFO_FADE_DURATION}ms ease`;
+    if (!isMobile && el.getAttribute('navbar-info-default') === 'active') {
+      el.style.position = 'relative';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+      el.style.zIndex = '1';
+    } else {
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.width = '100%';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = '0';
+    }
+  }
+
   function updateLinkClasses(activeKey: string | null) {
     links.forEach((l) => {
       const key = l.getAttribute('nav-dropdown-link');
@@ -93,6 +114,38 @@ export const initNavMobile = async () => {
 
     activeCard = null;
     updateLinkClasses(null);
+  }
+
+  /**
+   * Puts every mega card back in the same inline state as initial load (and hides the wrapper).
+   * Use when closing the global nav, on same-page navigation, or from `window.rapdevNav.resetDropdownCards` /
+   * the `rapdev:reset-nav-dropdown-cards` document event.
+   */
+  function resetAllDropdownCardsClosed() {
+    cards.forEach((card) => {
+      if (card.getAttribute('nav-dropdown-card') === 'wrapper') return;
+      const el = card as HTMLElement;
+      el.style.display = 'none';
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-15px)';
+      el.style.pointerEvents = 'none';
+    });
+    if (dropdownWrapper) dropdownWrapper.style.display = 'none';
+    infoCards.forEach((c) => setInfoCardInitialState(c as HTMLElement));
+    infoLinks.forEach((l) => l.classList.remove('is-active'));
+    activeCard = null;
+    updateLinkClasses(null);
+  }
+
+  document.addEventListener('rapdev:reset-nav-dropdown-cards', () => {
+    resetAllDropdownCardsClosed();
+  });
+
+  if (typeof window !== 'undefined') {
+    (window as Window & { rapdevNav?: { resetDropdownCards: () => void } }).rapdevNav = {
+      ...((window as Window & { rapdevNav?: { resetDropdownCards: () => void } }).rapdevNav ?? {}),
+      resetDropdownCards: resetAllDropdownCardsClosed,
+    };
   }
 
   // ——————————————————————————————————
@@ -152,27 +205,7 @@ export const initNavMobile = async () => {
   // ——————————————————————————————————
 
   infoCards.forEach((card) => {
-    const el = card as HTMLElement;
-    const parent = el.parentElement;
-    if (parent) parent.style.position = 'relative';
-
-    el.style.transition = `opacity ${INFO_FADE_DURATION}ms ease`;
-
-    // 🔑 Mobile: no default card visible
-    if (!isMobile && el.getAttribute('navbar-info-default') === 'active') {
-      el.style.position = 'relative';
-      el.style.opacity = '1';
-      el.style.pointerEvents = 'auto';
-      el.style.zIndex = '1';
-    } else {
-      el.style.position = 'absolute';
-      el.style.top = '0';
-      el.style.left = '0';
-      el.style.width = '100%';
-      el.style.opacity = '0';
-      el.style.pointerEvents = 'none';
-      el.style.zIndex = '0';
-    }
+    setInfoCardInitialState(card as HTMLElement);
   });
 
   function showInfoCard(key: string, parentCard: Element | null) {
@@ -224,8 +257,13 @@ export const initNavMobile = async () => {
     link.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
 
+      // Datadog lists use `.mega-child-item` around sub-links; ServiceNow uses
+      // `.w-dyn-item` in a `grid _2-columns` without that class, but both use
+      // `.mega-link-expanded` for the deep links. Without matching expanded links,
+      // those clicks bubble here, get preventDefault, and never navigate.
       const isButtonLink =
         target.closest('.mega-child-item') ||
+        target.closest('.mega-link-expanded') ||
         target.closest('.mobile-cta') ||
         target.closest('.card-wrapper');
 
@@ -235,7 +273,6 @@ export const initNavMobile = async () => {
 
         return;
       }
-
       e.preventDefault();
       e.stopPropagation();
 
@@ -305,24 +342,24 @@ export const initNavMobile = async () => {
   const mobileNavTrigger = document.querySelector(`[data="mobile-nav"]`);
 
   const openGlobalNav = () => {
+    const navEl = document.querySelector('.nav-menu-wrap') as HTMLElement;
+    navEl.classList.add('active');
     globalNavbar?.classList.add('open');
     document.body.classList.add('nav-open');
   };
   const closeGlobalNav = () => {
-    console.log('inside close');
-
+    resetAllDropdownCardsClosed();
+    const navEl = document.querySelector('.nav-menu-wrap') as HTMLElement;
+    navEl.classList.remove('active');
     globalNavbar?.classList.remove('open');
-
-    requestAnimationFrame(() => {
-      document.body.classList.remove('nav-open');
-    });
+    document.body.classList.remove('nav-open');
   };
 
   mobileNavTrigger?.addEventListener('click', (e) => {
     if (globalNavbar?.classList.contains('open')) {
       closeGlobalNav();
     } else {
-      if (e.target.closest('.navbar-brand')) return;
+      if ((e.target as HTMLElement).closest('.navbar-brand')) return;
       openGlobalNav();
     }
   });
