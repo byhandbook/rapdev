@@ -292,6 +292,11 @@ export const initNavDesktop = async () => {
     true
   );
 
+  // If the URL hash changes without a full page navigation, still force a full nav reset.
+  window.addEventListener('hashchange', () => {
+    resetAllDropdownCardsClosed();
+  });
+
   // ——————————————————————————————————
   // PART 2: Desktop Inner Info Tabs (Crossfade)
   // ——————————————————————————————————
