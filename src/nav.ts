@@ -6,9 +6,10 @@ import { fetchServiceNow } from '$utils/fetchServiceNow';
 import { initNavDesktop } from '$utils/initNavbarSystemDesktop';
 import { initNavMobile } from '$utils/initNavbarSystemMobile';
 import { reLayout } from '$utils/reLayout';
-const CACHE_KEY = 'megaCardsCache';
-const CACHE_TTL = 1000 * 60 * 60 * 24 * 30;
 
+const CACHE_KEY = 'megaCardsCachedddsdddsdsdgvvuuvsd';
+const CACHE_TTL = 1000 * 60 * 60 * 24 * 30;
+console.log('scrip running');
 function getCache() {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
@@ -105,7 +106,15 @@ async function loadMegaCardRight() {
 }
 
 // Run after DOM loads
-document.addEventListener('DOMContentLoaded', loadMegaCardRight);
+window.addEventListener('DOMContentLoaded', () => {
+  window.FinsweetAttributes ||= [];
+  window.FinsweetAttributes.push([
+    'list',
+    async (listInstances) => {
+      await loadMegaCardRight();
+    },
+  ]);
+});
 
 // Reload page on resize
 let isMobile = window.innerWidth <= 992;

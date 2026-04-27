@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const mqTablet = window.matchMedia('(max-width: 991px)');
   let fsInstance = null;
 
