@@ -14,6 +14,8 @@ export const initNavDesktop = async () => {
   const links = document.querySelectorAll('[nav-dropdown-link]');
   const cards = document.querySelectorAll('[nav-dropdown-card]');
   const dropdownWrapper = document.querySelector('[nav-dropdown-card="wrapper"]');
+  const infoLinks = document.querySelectorAll('[navbar-info-link]');
+  const infoCards = document.querySelectorAll('[navbar-info-card]');
 
   let activeCard: HTMLElement | null = null;
   let closeTimeout: any = null;
@@ -37,6 +39,28 @@ export const initNavDesktop = async () => {
       l.classList.remove('is-active');
       l.classList.remove('is-inactive');
     });
+  }
+
+  function setInfoCardInitialState(el: HTMLElement) {
+    const parent = el.parentElement;
+    if (parent) parent.style.position = 'relative';
+    el.style.transition = `opacity ${INFO_FADE_DURATION}ms ease`;
+
+    if (el.getAttribute('navbar-info-default') === 'active') {
+      el.style.position = 'relative';
+      el.style.width = '';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+      el.style.zIndex = '1';
+    } else {
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.width = '100%';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = '0';
+    }
   }
 
   cards.forEach((card) => {
@@ -107,6 +131,28 @@ export const initNavDesktop = async () => {
     if (!activeCard && dropdownWrapper) {
       (dropdownWrapper as HTMLElement).style.display = 'none';
     }
+  }
+
+  function resetAllDropdownCardsClosed() {
+    cards.forEach((card) => {
+      if (card.getAttribute('nav-dropdown-card') === 'wrapper') return;
+      const el = card as HTMLElement;
+      el.style.display = 'none';
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-15px)';
+      el.style.pointerEvents = 'none';
+    });
+    if (dropdownWrapper) {
+      (dropdownWrapper as HTMLElement).style.display = 'none';
+    }
+    infoCards.forEach((c) => setInfoCardInitialState(c as HTMLElement));
+    infoLinks.forEach((l) => l.classList.remove('is-active'));
+    activeCard = null;
+    clickLocked = false;
+    clearLinkClasses();
+    document.querySelectorAll('.navbar-underline').forEach((eachItem) => {
+      eachItem.classList.remove('active');
+    });
   }
 
   function cancelClose() {
@@ -212,34 +258,46 @@ export const initNavDesktop = async () => {
     }
   });
 
+  // Same-page anchor links do not unload the page, so force nav close/reset.
+  document.addEventListener(
+    'click',
+    (e) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+
+      let isSamePageAnchor = href.indexOf('#') === 0;
+      if (!isSamePageAnchor) {
+        const resolved = new URL(anchor.href, window.location.href);
+        isSamePageAnchor =
+          resolved.origin === window.location.origin &&
+          resolved.pathname === window.location.pathname &&
+          resolved.search === window.location.search &&
+          resolved.hash.length > 0;
+      }
+
+      if (!isSamePageAnchor) return;
+
+      const clickedInsideNav =
+        !!anchor.closest('[nav-dropdown-card]') ||
+        !!anchor.closest('[nav-dropdown-link]') ||
+        (!!dropdownWrapper && dropdownWrapper.contains(anchor));
+
+      if (!clickedInsideNav) return;
+      resetAllDropdownCardsClosed();
+    },
+    true
+  );
+
   // ——————————————————————————————————
   // PART 2: Desktop Inner Info Tabs (Crossfade)
   // ——————————————————————————————————
 
-  const infoLinks = document.querySelectorAll('[navbar-info-link]');
-  const infoCards = document.querySelectorAll('[navbar-info-card]');
-
   infoCards.forEach((card) => {
-    const el = card as HTMLElement;
-    const parent = el.parentElement;
-    if (parent) parent.style.position = 'relative';
-
-    el.style.transition = `opacity ${INFO_FADE_DURATION}ms ease`;
-
-    if (el.getAttribute('navbar-info-default') === 'active') {
-      el.style.position = 'relative';
-      el.style.opacity = '1';
-      el.style.pointerEvents = 'auto';
-      el.style.zIndex = '1';
-    } else {
-      el.style.position = 'absolute';
-      el.style.top = '0';
-      el.style.left = '0';
-      el.style.width = '100%';
-      el.style.opacity = '0';
-      el.style.pointerEvents = 'none';
-      el.style.zIndex = '0';
-    }
+    setInfoCardInitialState(card as HTMLElement);
   });
 
   function showInfoCard(key: string, parentCard: Element | null) {
